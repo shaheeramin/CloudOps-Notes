@@ -1,0 +1,9 @@
+RUn these commands to check for UDP/TCP packaets
+
+tcpdump -n -i bond0 -c 1000000 > tdump
+cat tdump | grep -v ARP | awk '{print $3}' | sort | uniq -c | sort -nr | head -n5
+cat tdump | grep -v ARP | awk '{print $5}' | sort | uniq -c | sort -nr | head -n5
+
+tcpdump udp -qn -i bond0 -c 100000 > udump
+cat udump | grep -v ARP | awk '{print $3}' | sort | uniq -c | sort -nr | head -n5
+cat udump | grep -v ARP | awk '{print $5}' | sort | uniq -c | sort -nr | head -n5
