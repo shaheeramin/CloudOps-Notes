@@ -10,14 +10,14 @@ Password -> 1password (Alpha Prod)
 
 ## Available Disk 
 
-Usulally we need to reduce the log file size in root. US the following command reduce the file size to 1G
+Usulally we need to reduce the log file size in root. Use the following command reduce the file size to 1G
 ```
 truncate -s 1g /var/log/$file_name
 ```
 
 ## Cancelling Stalled Events
 
-**Note: Cancelling evets are very risky and can lead to serious consequences, please consult a peer if you are unsure!**
+**Note: Cancelling events are very risky and can lead to serious consequences, please consult a peer if you are unsure!**
 
 We have different types of events so consulting this [playbook](https://github.com/digitalocean/documentation/blob/master/oncall/playbooks/procedures/cancelling-events.md) is best before proceeding
 
@@ -44,7 +44,7 @@ hvdclient hv eventinfo | grep $droplet_ID | grep snapshot
 ```
 ### Using Alpha to get a list of stalled events
 
-Login to Alphas and run the following command to see which events are stuck for a long time 
+Login to Alpha and run the following command to see which events are stuck for a long time 
 ```
 SELECT e.id, e.droplet_id, s.name, e.region_id, e.description
 FROM events e
@@ -54,7 +54,7 @@ WHERE e.event_type_id IN (7,8)
 	AND e.updated_at <= NOW() - INTERVAL 6 hour
 	AND e.action_status IS NULL;
 ```
-After getting a list, login to the HV from the tables in Alpha and run the following commands to cancel these events
+After getting a list, login to the HV from the table in Alpha and run the following commands to cancel these events
 ```
 ps aux | grep backup
 cd /var/lib/libvirt/images
@@ -90,24 +90,24 @@ COCTL command to escalate an escalation
 ```
 coctl escalate ESC-#####
 ```
-COCTL command to set state on many servers
+COCTL command to set state on servers
 ```
 coctl server set-state syd1node449 syd1node465 "OPS-39210"
 ```
 To remove state, use `""` instead of `"OPS-39210"`
 
-COCTL command to find low droplet HV's
+COCTL command to find low droplet HVs
 ```
 coctl alpha servers-with-few-droplets -r $region -f $fleet --model $model_name -d ####
 ```
-COCTL command to find abusive droplets on a node
+COCTL command to find abuse on a node
 ```
 coctl leecher $node_name
 ```
 
 ## DDOS
 
-Run these commands to check for UDP/TCP packaets
+Run these commands to check for UDP/TCP packets
 ```
 tcpdump -n -i bond0 -c 1000000 > tdump
 cat tdump | grep -v ARP | awk '{print $3}' | sort | uniq -c | sort -nr | head -n5
@@ -130,7 +130,7 @@ Single droplet Migration
 ```
 /usr/local/bin/migrate droplet $Droplet_ID
 ```
-To search for a Job ID, first login to a node of the same region region and use either of the twom commands
+To search for a Job ID, first login to a node of the same region region and use either of the two commands
 ```
 migrate jobs
 migrate job $jod_ID_####
@@ -151,7 +151,7 @@ A few Flags we use with migrations
 --safe
 ```
 
-To evacuate many nodes, use this command:
+To evacuate many nodes
 ```
 Multiple Nodes Evac:
 /usr/local/bin/migrate evac sfo3node686 sfo3node697 --fallback --hvlimit=6 --concurrent=100
@@ -186,7 +186,7 @@ Reset BMC:
 ```
 ipmitool mc reset cold
 ```
-Check temp:
+Check Temp:
 ```
 ipmitool sdr elist | grep -i inl
 ```
@@ -194,7 +194,6 @@ Zombiecheck
 ```
 zombiecheck '$hostname -s'
 ```
-
 Clean hypervisors
 ```
 zombiecheck -c `$hostname -s'
@@ -207,7 +206,7 @@ Network errors
 ```
 tcpdump -nnn -i bond0 -c 5000 | awk '{print $5}' | cut -f 1,2,3,4 -d '.' | sort | uniq -c | sort -nr | head -n 20
 ```
-libvirt: command to start up all guest virtual machines
+libvirt: command to start up all guest virtual machines taken from [here](https://unix.stackexchange.com/questions/293570/libvirt-command-to-start-up-all-guest-virtual-machines-which-have-auto-start-en)
 ```
 for i in $(virsh list --name —resume —paused); do virsh resume "$i"; done
 for i in $(virsh list --name); do virsh resume "$i"; done
@@ -246,7 +245,7 @@ storman diag --osd ###
 Verfify the destroy of disk devices using `ceph osd tree | grep osd.###`
 
 
-Sometimes, DCOPs may ask us to power on the blinking of  storage device, use the following command for that after logging into the storage node
+Sometimes, DCOPs may ask us to power on the blinking of storage device, use the following command for that after logging into the storage node
 ```
 $ export device=$device
 $ sudo /opt/apps/storman/bin/storman locate start --disk=$device
@@ -272,9 +271,9 @@ Password in 1pass -> paperspace-prod -> the Password OR Use this [playbook](http
 
 ## Reboot Node
 
-Run the following command to grafully shut down a node `sudo shutdown -r +1 `
+Run the following command to gracfully shut down a node `sudo shutdown -r +1 `
 
-## Resharding a Bucket
+## Resharding a Bucket [Golden Oldie]
 
 Consult the [playbook](https://github.com/digitalocean/documentation/blob/master/oncall/playbooks/procedures/reshard-spaces-bucket.md) and [glass](https://glass.internal.digitalocean.com/object/bucketresharding/candidates) page to see which buckets need resharding, check the right region as well.
 
@@ -301,7 +300,7 @@ The command to repave can vary but this is the general syntax
 ```
 st2 run digitalocean.provision hosts=$server role=infra-hypervisor hpw_workflow_wait=false release=true
 ```
-Some nodes would need to be PXE booted to Live and start their repave using their serial number as the hostnames using `dmidecode -s` or `dmidecode -s system-serial-number`
+Some nodes would need to be PXE booted to Live and start their repave using their serial number as the hostnames using `dmidecode -s` or `dmidecode -s system-serial-number` to find the serial number
 
 More commands for repaves
 ```
@@ -318,6 +317,8 @@ Use the following command to Sunset/retire a node (needs to be run from st2)
 ```
 st2 run digitalocean.sunset_workflow hosts=nyc3node4148,nyc3node4135 tower_username="${LDAP_USERNAME}" tower_password="${LDAP_PASSWORD}" jira_ticket=OPS-34167 --async
 ```
+If secure erase is not needed, you can remove from chef and delete from alpha
+
 ## Traceroute
 
 To run a traceroute against the mentioned IP for 100 packets with details (may need mtr utlity if not installed locally or on nodes)
