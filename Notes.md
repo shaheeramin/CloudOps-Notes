@@ -64,6 +64,16 @@ ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power status
 ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power off
 ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power on
 ```
+## OSD 
+
+Verfify the destroy of disk devices using `ceph osd tree | grep osd.###`
+
+Sometimes, DCOPs may ask us to power on the blinking of  storage device, use the following command for that after logging into the storage node
+```
+$ export device=$device
+$ sudo /opt/apps/storman/bin/storman locate start --disk=$device
+```
+The drive's identification light should now be blinking!
 
 ## Reboot Node
 
@@ -93,3 +103,10 @@ The command to repave can vary but this is the general syntax
 st2 run digitalocean.provision hosts=BJBKCP2 role=infra-hypervisor hpw_workflow_wait=false release=true
 ```
 
+## Vault Passwords
+
+HV Console [Password](https://vault-ui.internal.digitalocean.com/ui/vault/secrets/secret/show/platform/infra-cred-mgr/production/password/root)
+
+Storage Node Console [Password](https://vault-ui.internal.digitalocean.com/ui/vault/secrets/secret/show/platform/infra-cred-mgr/production/password/root_storage)
+
+IPMI Vault [Password](https://vault-ui.internal.digitalocean.com/ui/vault/secrets/secret/show/platform/ipmi/password)
