@@ -53,8 +53,43 @@ tcpdump udp -qn -i bond0 -c 100000 > udump
 cat udump | grep -v ARP | awk '{print $3}' | sort | uniq -c | sort -nr | head -n5
 cat udump | grep -v ARP | awk '{print $5}' | sort | uniq -c | sort -nr | head -n5
 
+## IPMI kdump and Reboot
+
+Run the `diag` command for a kdump and the `power off/on` for a IPMI reboot
+
+```
+ipmitool -U root -P $DO_IPMI -I lanplus -H $BMC_IP sel elist
+ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power diag
+ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power status
+ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power off
+ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power on
+```
+
+## Reboot Node
+
+Run the following command to grafully shut down a node `sudo shutdown -r +1 `
+
 ## Resharding a Bucket
 
 Consult the [playbook](https://github.com/digitalocean/documentation/blob/master/oncall/playbooks/procedures/reshard-spaces-bucket.md) and [glass](https://glass.internal.digitalocean.com/object/bucketresharding/candidates) page to see which buckets need resharding, check the right region as well.
 
 Sometimes we need to stop a reashard and can look at this [playbook](https://github.com/digitalocean/documentation/blob/master/oncall/playbooks/procedures/reshard-spaces-bucket.md#stopping-a-reshard) for that. SSHing listed in here is important to understand.
+
+Command from jump to remove shards
+```
+samin@prod-jump04:~$ ./caissonctl --region $region --cluster object01 remove-stale-instances start
+```
+Command to list shards (login to the cluster first)
+```
+samin@prod-rgw01-object01:~$ sudo radosgw-admin reshard stale-instances list
+```
+
+## Repaving a node
+
+Source into the correct region in st2 e.g. for nyc2 use `source env/production nyc2` to repave a node in nyc2.
+
+The command to repave can vary but this is the general syntax
+```
+st2 run digitalocean.provision hosts=BJBKCP2 role=infra-hypervisor hpw_workflow_wait=false release=true
+```
+
