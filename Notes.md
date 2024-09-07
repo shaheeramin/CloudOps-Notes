@@ -21,13 +21,26 @@ truncate -s 1g /var/log/$file_name
 
 We have different types of events so consulting this [playbook](https://github.com/digitalocean/documentation/blob/master/oncall/playbooks/procedures/cancelling-events.md) is best before proceeding
 
+Show event info: 
+```
+hvdclient hv eventinfo -t $eventID
+```
+
+Show all running and queued events: 
+```
+/opt/apps/hvdclient/bin/hvdclient hv eventinfo -s RUNNING -s QUEUED
+```
 Run the following to cancel a queued live migrate. Change the queued event type and Job ID for other events
 ```
-event cancel --status=QUEUED --vm-id=354853776 --type=/vm/live_migrate 1935006380
+event cancel --status=QUEUED --vm-id=###### --type=/vm/live_migrate $event_ID####
 ```
-Run the following to see event on a signle Droplet
+Run the following to see event on a single Droplet
 ```
 hvdclient hv eventinfo -A -d $droplet_id
+```
+Check snapshot event
+```
+hvdclient hv eventinfo | grep $droplet_ID | grep snapshot
 ```
 ### Using Alpha to get a list of stalled events
 
@@ -99,6 +112,7 @@ Run these commands to check for UDP/TCP packaets
 tcpdump -n -i bond0 -c 1000000 > tdump
 cat tdump | grep -v ARP | awk '{print $3}' | sort | uniq -c | sort -nr | head -n5
 cat tdump | grep -v ARP | awk '{print $5}' | sort | uniq -c | sort -nr | head -n5
+
 ```
 ```
 tcpdump udp -qn -i bond0 -c 100000 > udump
@@ -112,6 +126,10 @@ Full node migration
 ```
 migrate evac $(hostname) --no-confirm --emergency --email --fallback --jira=OPS-#####
 ```
+Single droplet Migration
+```
+/usr/local/bin/migrate droplet $Droplet_ID
+```
 To search for a Job ID, first login to a node of the same region region and use either of the twom commands
 ```
 migrate jobs
@@ -119,7 +137,7 @@ migrate job $jod_ID_####
 ```
 To migrate highest CPU Usage Droplets, use this command (change head -n ## or tail -n ## for the number of droplets to migrate)
 ```
-/usr/local/bin/migrate droplet --safe $(ps -aux  --sort=-%cpu | grep qemu-system-x86_64 | grep Droplet- | cut -d = -f 2  | cut -d , -f 1 | cut -d - -f 2 | head -n  15 | tail -n 9 | xargs)
+/usr/local/bin/migrate droplet —safe $(ps -aux --sort=-%cpu | grep qemu-system-x86_64 | grep Droplet- | cut -d = -f 2 | cut -d , -f 1 | cut -d - -f 2 | head -n 8 | tail -n 8 | xargs)
 ```
 A few Flags we use with migrations
 ```
@@ -139,11 +157,60 @@ Multiple Nodes Evac:
 /usr/local/bin/migrate evac sfo3node686 sfo3node697 --fallback --hvlimit=6 --concurrent=100
 ```
 `--hvlimit` is the number of concurrent Hyper Visors being evacuated and `--concurrent` is the number of droplets migrating concurrently
+Check region stats
+```
+migrate statistics $region
+```
 ## GPU Repave
 
 Command for GPU provisioning
 ```
 st2 run digitalocean.provision hosts=DHLY044 rack_name="B2R25 (TR6:01:613165:0703)" rack_position=2 role=infra-hypervisor-gpu fleet="do:compute-fleet:gpu-nvidia-h100" os=jammy train=test
+```
+
+## Hypervisor Health Checks
+
+The following commands can be used to check a HV's health. HV Graphs can be more useful in some cases
+```
+sudo dmesg -T -l err | tee >(wc -l) | tail -20
+ethtool eth1 | grep -i "link detected"
+netstat -i | sed -n '2p; /eth/p'
+sudo l3mpls-diagnostics
+ipmitool sel elist
+tcpdump -nnn -i bond0 -c 5000 | awk '{print $5}' | cut -f 1,2,3,4 -d '.' | sort | uniq -c | sort -nr | head -n 20
+sudo netstat -su
+cat /proc/net/udp
+lsb_release -a
+```
+Reset BMC:
+```
+ipmitool mc reset cold
+```
+Check temp:
+```
+ipmitool sdr elist | grep -i inl
+```
+Zombiecheck
+```
+zombiecheck '$hostname -s'
+```
+
+Clean hypervisors
+```
+zombiecheck -c `$hostname -s'
+```
+Change droplet state
+```
+droplet-admin  deactivate --server=$node_name #Droplet_ID####
+```
+Network errors
+```
+tcpdump -nnn -i bond0 -c 5000 | awk '{print $5}' | cut -f 1,2,3,4 -d '.' | sort | uniq -c | sort -nr | head -n 20
+```
+libvirt: command to start up all guest virtual machines
+```
+for i in $(virsh list --name —resume —paused); do virsh resume "$i"; done
+for i in $(virsh list --name); do virsh resume "$i"; done
 ```
 ## IPMI kdump and Reboot
 
@@ -155,6 +222,20 @@ ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power diag
 ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power status
 ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power off
 ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power on
+```
+
+## Image Management
+
+Check image details 
+```
+/opt/apps/imagemanagement/bin/imagectl f ls --filename=image-155259585.raw.sparse.gz
+```
+
+## Local Machine
+
+Check git version
+```
+git rev-parse HEAD
 ```
 ## OSD 
 
@@ -212,20 +293,24 @@ samin@prod-rgw01-object01:~$ sudo radosgw-admin reshard stale-instances list
 
 Source into the correct region in st2 e.g. for nyc2 use `source env/production nyc2` to repave a node in nyc2.
 
+Check repave status
+```
+st2 run digitalocean.hms hosts=$SERVER
+```
 The command to repave can vary but this is the general syntax
 ```
-st2 run digitalocean.provision hosts=BJBKCP2 role=infra-hypervisor hpw_workflow_wait=false release=true
+st2 run digitalocean.provision hosts=$server role=infra-hypervisor hpw_workflow_wait=false release=true
 ```
 Some nodes would need to be PXE booted to Live and start their repave using their serial number as the hostnames using `dmidecode -s` or `dmidecode -s system-serial-number`
 
 More commands for repaves
 ```
-st2 run digitalocean.provision hosts=abc1node1 train=test hpw_workflow_wait=false
+st2 run digitalocean.provision hosts=$server train=test hpw_workflow_wait=false
 st2 run digitalocean.provision hosts=xxxx,xxxxx,xxxxx  release=true --async
-st2 run digitalocean.provision hosts=fra1node3665 release=true --async
+st2 run digitalocean.provision hosts=$server release=true --async
 st2 execution tail 6621b703c68c7fc4cd30240d
-while true; do st2 run digitalocean.hms hosts=fra1node3665; sleep 60; done
-st2 run digitalocean.provision hosts=FJLY044 rack_name="B2R28 (TR6:01:613165:0706)" rack_position=2 role=infra-hypervisor-gpu fleet="do:compute-fleet:gpu-nvidia-h100" os=jammy train=test
+while true; do st2 run digitalocean.hms hosts=$server; sleep 60; done
+st2 run digitalocean.provision hosts=$server rack_name="B2R28 (TR6:01:613165:0706)" rack_position=2 role=infra-hypervisor-gpu fleet="do:compute-fleet:gpu-nvidia-h100" os=jammy train=test
 ```
 ## Sunset of a node
 
@@ -233,9 +318,14 @@ Use the following command to Sunset/retire a node (needs to be run from st2)
 ```
 st2 run digitalocean.sunset_workflow hosts=nyc3node4148,nyc3node4135 tower_username="${LDAP_USERNAME}" tower_password="${LDAP_PASSWORD}" jira_ticket=OPS-34167 --async
 ```
-## VAST
+## Traceroute
 
-### VAST credential change
+To run a traceroute against the mentioned IP for 100 packets with details (may need mtr utlity if not installed locally or on nodes)
+```
+mtr -rwbzc100 $IP_ADDR####
+```
+
+## VAST
 
 [Playbook](https://github.com/digitalocean/documentation/blob/1d00ced569909627566bd03f183624b535d4e36e/oncall/playbooks/procedures/vast-support-credentials.md#L4) to change the credentials for VAST when they need to use our clusters.
 
