@@ -218,10 +218,10 @@ Run the `diag` command for a kdump and the `power off/on` for a IPMI reboot
 
 ```
 ipmitool -U root -P $DO_IPMI -I lanplus -H $BMC_IP sel elist
-ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power diag
-ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power status
-ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power off
-ipmitool -U root -I lanplus -H $BMC_IP-P $IPMI_password chassis power on
+ipmitool -U root -I lanplus -H $BMC_IP -P $IPMI_password chassis power diag
+ipmitool -U root -I lanplus -H $BMC_IP -P $IPMI_password chassis power status
+ipmitool -U root -I lanplus -H $BMC_IP -P $IPMI_password chassis power off
+ipmitool -U root -I lanplus -H $BMC_IP -P $IPMI_password chassis power on
 ```
 
 ## Image Management
