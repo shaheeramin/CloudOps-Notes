@@ -298,7 +298,7 @@ st2 run digitalocean.hms hosts=$SERVER
 ```
 The command to repave can vary but this is the general syntax
 ```
-st2 run digitalocean.provision hosts=$server role=infra-hypervisor --async release=true
+st2 run digitalocean.provision hosts=$server role=infra-hypervisor release=true --async
 ```
 Some nodes would need to be PXE booted to Live and start their repave using their serial number as the hostnames using `dmidecode -s` or `dmidecode -s system-serial-number` to find the serial number
 
