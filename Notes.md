@@ -315,6 +315,7 @@ st2 run digitalocean.provision hosts=$server rack_name="B2R28 (TR6:01:613165:070
 ```
 ## Sunset of a node
 
+[Playbook](https://github.internal.digitalocean.com/digitalocean/stackstorm-st2/blob/main/docs/digitalocean/sunset_workflow.md)
 Use the following command to Sunset/retire a node (needs to be run from st2)
 ```
 st2 run digitalocean.sunset_workflow hosts=nyc3node4148,nyc3node4135 tower_username="${LDAP_USERNAME}" tower_password="${LDAP_PASSWORD}" jira_ticket=OPS-34167 --async
