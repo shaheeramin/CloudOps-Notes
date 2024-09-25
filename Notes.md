@@ -193,7 +193,9 @@ ipmitool sdr elist | grep -i inl
 ```
 Zombiecheck
 ```
+zombiecheck $(hostname)
 zombiecheck '$hostname -s'
+zombiecheck $(hostname) --cleanup
 ```
 Clean hypervisors
 ```
