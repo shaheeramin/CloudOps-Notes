@@ -137,7 +137,7 @@ migrate job $jod_ID_####
 ```
 To migrate highest CPU Usage Droplets, use this command (change head -n ## or tail -n ## for the number of droplets to migrate)
 ```
-/usr/local/bin/migrate droplet —safe $(ps -aux --sort=-%cpu | grep qemu-system-x86_64 | grep Droplet- | cut -d = -f 2 | cut -d , -f 1 | cut -d - -f 2 | head -n 8 | tail -n 8 | xargs)
+/usr/local/bin/migrate droplet $(ps -aux --sort=-%cpu | grep qemu-system-x86_64 | grep Droplet- | cut -d = -f 2 | cut -d , -f 1 | cut -d - -f 2 | head -n 8 | tail -n 8 | xargs)
 ```
 A few Flags we use with migrations
 ```
