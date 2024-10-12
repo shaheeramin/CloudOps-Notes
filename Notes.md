@@ -2,11 +2,12 @@
 
 ## Alpha
 
-Login to Alpha DB using (CloudOps user has beeen disabled, use your own users)
+Login to Alpha DB using:
 ```
 mysql -h prod-omega-mysql.nyc3.internal.digitalocean.com -u "username" -p
 Password -> Password shared by DBRE
 ```
+CloudOps user has beeen disabled, use your own users and create a DATA Ticket if creds have not been shared already. [Example Ticket](https://do-internal.atlassian.net/browse/DATA-7987)
 
 ## Available Disk 
 
