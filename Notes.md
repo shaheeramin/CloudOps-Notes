@@ -2,10 +2,10 @@
 
 ## Alpha
 
-Login to Alpha DB using 
+Login to Alpha DB using (CloudOps user has beeen disabled, use your own users)
 ```
-mysql -h prod-omega-mysql.nyc3.internal.digitalocean.com -u svc_cloudops_p_ro -p
-Password -> 1password (Alpha Prod)
+mysql -h prod-omega-mysql.nyc3.internal.digitalocean.com -u "username" -p
+Password -> Password shared by DBRE
 ```
 
 ## Available Disk 
