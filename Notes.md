@@ -175,10 +175,10 @@ st2 run digitalocean.provision hosts=DHLY044 rack_name="B2R25 (TR6:01:613165:070
 The following commands can be used to check a HV's health. HV Graphs can be more useful in some cases
 ```
 sudo dmesg -T -l err | tee >(wc -l) | tail -20
-ethtool eth1 | grep -i "link detected"
-netstat -i | sed -n '2p; /eth/p'
 sudo l3mpls-diagnostics
 ipmitool sel elist
+ethtool eth1 | grep -i "link detected"
+netstat -i | sed -n '2p; /eth/p'
 tcpdump -nnn -i bond0 -c 5000 | awk '{print $5}' | cut -f 1,2,3,4 -d '.' | sort | uniq -c | sort -nr | head -n 20
 sudo netstat -su
 cat /proc/net/udp
